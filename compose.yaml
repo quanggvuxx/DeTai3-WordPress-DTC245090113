@@ -1,0 +1,110 @@
+name: de-tai-3-wordpress
+
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Run setup first}
+      MYSQL_DATABASE: showcase
+      MYSQL_USER: showcase_user
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Run setup first}
+      MYSQL_EXPORTER_PASSWORD: ${MYSQL_EXPORTER_PASSWORD:?Run setup first}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql/initdb:/docker-entrypoint-initdb.d:ro
+    networks:
+      - db_net
+    healthcheck:
+      test: ["CMD-SHELL", "MYSQL_PWD=\"$$MYSQL_ROOT_PASSWORD\" mysql -h 127.0.0.1 -u root --silent -e 'SELECT 1' > /dev/null"]
+      interval: 15s
+      timeout: 6s
+      retries: 20
+      start_period: 30s
+    security_opt:
+      - no-new-privileges:true
+
+  wordpress:
+    image: wordpress:php8.3-apache
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      WORDPRESS_DB_HOST: mysql:3306
+      WORDPRESS_DB_NAME: showcase
+      WORDPRESS_DB_USER: showcase_user
+      WORDPRESS_DB_PASSWORD: ${MYSQL_PASSWORD:?Run setup first}
+      SITE_URL: ${SITE_URL:-http://localhost:8080}
+      WORDPRESS_CONFIG_EXTRA: |
+        define('DISALLOW_FILE_EDIT', true);
+        define('WP_HOME', getenv('SITE_URL'));
+        define('WP_SITEURL', getenv('SITE_URL'));
+        if (isset($$_SERVER['HTTP_X_FORWARDED_PROTO']) && $$_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
+          $$_SERVER['HTTPS'] = 'on';
+        }
+    volumes:
+      - wordpress_data:/var/www/html
+      - ./wordpress/themes/product-showcase:/var/www/html/wp-content/themes/product-showcase:ro
+    networks:
+      - app_net
+      - db_net
+    security_opt:
+      - no-new-privileges:true
+
+  phpmyadmin:
+    image: phpmyadmin:5.2-apache
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      UPLOAD_LIMIT: 32M
+    ports:
+      - "127.0.0.1:8081:80"
+    networks:
+      - db_net
+      - admin_net
+    security_opt:
+      - no-new-privileges:true
+
+  nginx:
+    build:
+      context: ./nginx
+    restart: unless-stopped
+    depends_on:
+      - wordpress
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - nginx_logs:/var/log/site
+    networks:
+      - app_net
+      - ingress_net
+      - obs_net
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+      - /var/run:rw,noexec,nosuid,size=8m
+      - /var/cache/nginx:rw,noexec,nosuid,size=16m,uid=101,gid=101,mode=0700
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  mysql_data:
+  wordpress_data:
+  nginx_logs:
+
+networks:
+  ingress_net:
+  admin_net:
+  app_net:
+    internal: true
+  db_net:
+    internal: true
+  obs_net:
+    internal: true

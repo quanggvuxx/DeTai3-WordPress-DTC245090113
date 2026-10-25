@@ -1,0 +1,47 @@
+/*
+Theme Name: Product Showcase K23
+Theme URI: https://example.invalid/
+Author: Student Project
+Description: Giao diện quảng bá sản phẩm, tạo riêng cho Đề tài 3.
+Version: 1.0.0
+Text Domain: showcase-k23
+*/
+:root { --ink:#152344;--muted:#62718b;--accent:#4f46e5;--sky:#dbeafe;--line:#e7ebf2;--paper:#fff;--canvas:#f6f8fc }
+* { box-sizing:border-box }
+html {scroll-behavior:smooth}
+body {margin:0;font:16px/1.65 system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--ink);background:var(--canvas)}
+a {color:inherit;text-decoration:none}a:hover {color:var(--accent)}
+.container {width:min(1120px,calc(100% - 40px));margin:auto}
+.site-header {background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}
+.head-inner {min-height:74px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.brand {font-size:1.36rem;letter-spacing:-.6px;font-weight:850;color:var(--ink)}.brand span {color:var(--accent)}
+nav {display:flex;gap:24px;align-items:center;font-size:.93rem;font-weight:650}
+.btn {display:inline-flex;align-items:center;justify-content:center;border-radius:13px;padding:13px 22px;background:var(--accent);color:white;font-weight:720;transition:transform .15s,background .15s}
+.btn:hover {background:#3730a3;color:#fff;transform:translateY(-1px)}.btn-outline {background:#fff;color:var(--accent);border:1px solid #c7d2fe}
+.btn-outline:hover {background:#eef2ff;color:#3730a3}
+.hero {padding:88px 0 90px;background:radial-gradient(circle at 85% 25%,#dbeafe 0,transparent 35%),linear-gradient(125deg,#f0f5ff 0,#fff 70%)}
+.hero-grid {display:grid;grid-template-columns:1.06fr .94fr;align-items:center;gap:42px}
+.eyebrow {font-size:.8rem;font-weight:850;letter-spacing:.17em;color:var(--accent);text-transform:uppercase}
+h1 {font-size:clamp(2.5rem,5vw,4.5rem);line-height:1.13;letter-spacing:-.07em;margin:14px 0 22px}
+h2 {font-size:clamp(1.8rem,3vw,2.55rem);line-height:1.2;letter-spacing:-.05em;margin:0 0 12px}
+.lead {font-size:1.08rem;color:var(--muted);max-width:540px;margin-bottom:28px}
+.hero-visual {min-height:360px;display:flex;align-items:center;justify-content:center;border-radius:36px;background:linear-gradient(135deg,#818cf8,#c4b5fd);box-shadow:0 25px 70px #5b4de033;position:relative;overflow:hidden}
+.hero-visual:before,.hero-visual:after {content:'';position:absolute;border:1px solid #ffffff70;border-radius:50%;width:360px;height:360px}
+.hero-visual:after {width:260px;height:260px}.hero-visual span {position:relative;font-size:9rem;filter:drop-shadow(0 12px 9px #312e8160)}
+.section {padding:72px 0}.section-heading {display:flex;align-items:end;justify-content:space-between;gap:24px;margin-bottom:28px}.section-heading p {max-width:560px;color:var(--muted);margin:0}
+.grid {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
+.product-card {background:var(--paper);border:1px solid var(--line);border-radius:22px;overflow:hidden;box-shadow:0 6px 22px #142a490a;transition:transform .15s,box-shadow .15s}
+.product-card:hover {transform:translateY(-4px);box-shadow:0 12px 35px #142a4920}
+.product-art {height:220px;background:linear-gradient(135deg,#e0e7ff,#dbeafe);display:flex;align-items:center;justify-content:center;font-size:5.8rem}
+.product-art:nth-child(2n) {background:linear-gradient(135deg,#dcfce7,#dbeafe)}
+.product-art img {width:100%;height:100%;object-fit:cover}
+.product-content {padding:22px 24px 26px}.product-content h3 {font-size:1.28rem;line-height:1.35;margin:0 0 9px}.product-content p {color:var(--muted);font-size:.94rem;margin:0 0 14px}
+.price {font-weight:850;font-size:1.14rem;color:var(--accent)}.small-link {font-weight:720;color:var(--accent)}
+.info-strip {border:1px solid #c7d2fe;border-radius:24px;background:#eef2ff;padding:35px 38px;display:flex;justify-content:space-between;align-items:center;gap:25px}
+.info-strip p {color:var(--muted);margin:4px 0 0}
+.entry {background:white;border-radius:24px;border:1px solid var(--line);padding:40px;margin:45px auto;max-width:830px}
+.entry h1 {font-size:2.5rem}.entry-content {color:#40506a}.entry-content img {max-width:100%;height:auto}
+.site-footer {border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-size:.9rem;background:#fff}
+.footer-grid {display:flex;justify-content:space-between;gap:20px}
+@media(max-width:850px) {.hero-grid {grid-template-columns:1fr}.hero-visual {min-height:240px}.grid {grid-template-columns:repeat(2,minmax(0,1fr))}nav {gap:13px}}
+@media(max-width:560px) {.grid {grid-template-columns:1fr}.hero {padding:48px 0}.hero-visual span{font-size:6rem}.section-heading,.info-strip,.footer-grid {display:block}.info-strip .btn {margin-top:18px}nav {font-size:.8rem;gap:9px}.head-inner {flex-wrap:wrap;padding:12px 0}}
