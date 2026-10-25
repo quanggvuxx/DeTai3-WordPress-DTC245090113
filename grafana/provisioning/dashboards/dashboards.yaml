@@ -1,0 +1,9 @@
+apiVersion: 1
+providers:
+  - name: Website Showcase
+    orgId: 1
+    folder: Do an 3
+    type: file
+    editable: false
+    options:
+      path: /var/lib/grafana/dashboards
