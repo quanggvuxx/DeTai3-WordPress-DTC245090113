@@ -1,0 +1,30 @@
+services:
+  loki:
+    image: grafana/loki:3.7.8
+    restart: unless-stopped
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./logging/loki.yaml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
+    networks:
+      - obs_net
+    security_opt:
+      - no-new-privileges:true
+
+  promtail:
+    # Promtail is EOL in 2026; retained ONLY because the assignment explicitly requests it.
+    image: grafana/promtail:3.6.11
+    restart: unless-stopped
+    command: -config.file=/etc/promtail/config.yml
+    volumes:
+      - ./logging/promtail.yaml:/etc/promtail/config.yml:ro
+      - nginx_logs:/var/log/site:ro
+    networks:
+      - obs_net
+    depends_on:
+      - loki
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  loki_data:
