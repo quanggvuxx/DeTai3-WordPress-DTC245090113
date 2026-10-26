@@ -1,6 +1,16 @@
 # ĐỀ TÀI 3 – Website Quảng bá Sản phẩm (WordPress)
 
-> Môn: Triển khai và Quản trị Hệ thống Phần mềm. Bộ mã nguồn mẫu chạy tại máy cục bộ (Windows + Docker Desktop) phục vụ thực hành, kiểm thử, báo cáo và demo. **Chưa được xác thực bằng Docker chạy thực tế trong môi trường tạo file**: người thực hiện phải tự chạy và chụp màn hình chứng minh.
+> Môn: Triển khai và Quản trị Hệ thống Phần mềm. Bộ mã nguồn mẫu chạy tại máy cục bộ (Windows + Docker Desktop) phục vụ thực hành, kiểm thử, báo cáo và demo. **Trạng thái triển khai:** Hệ thống đã được triển khai và kiểm thử thực tế trên Windows với Docker Desktop và WSL2.
+
+- 11 container Docker hoạt động.
+- WordPress, phpMyAdmin, Prometheus và Grafana trả về HTTP 200.
+- Prometheus có 4/4 Targets UP.
+- Grafana hiển thị đầy đủ 6 biểu đồ giám sát.
+- Loki và Promtail thu thập log Nginx thành công.
+- Đã kiểm thử 3 truy vấn LogQL.
+- Đã áp dụng và kiểm tra các biện pháp Hardening.
+- Đã push đủ 3 commit lên GitHub.
+- Đã lưu 12 ảnh minh chứng tại `docs/screenshots/`.: người thực hiện phải tự chạy và chụp màn hình chứng minh.
 
 ## 1. Các thành phần và cổng
 
@@ -194,6 +204,70 @@ docker compose -f compose.yaml -f compose.monitoring.yaml -f compose.logging.yam
 | cAdvisor `DOWN` hoặc metrics thiếu | Kiểm tra `docker compose ... logs cadvisor`; Docker Desktop/WSL2 giới hạn host mounts và cgroup, cần thử trên Linux VM nếu muốn số liệu container đầy đủ |
 | Loki không có log | Chạy nhiều request tới website, xem `docker compose ... logs promtail`, trong Grafana Explore chọn Loki và Last 15 minutes |
 | `permission denied` MySQL/WordPress | Kiểm tra `docker compose ... logs mysql wordpress`; thử bỏ `security_opt` của service gặp lỗi, ghi rõ đánh đổi bảo mật trong báo cáo |
+
+
+### 11.1. Khắc phục lỗi MySQL Exporter (mysql_up = 0)
+
+**Hiện tượng:** Grafana không hiển thị dữ liệu MySQL. Prometheus trả về `mysql_up = 0`.
+
+**Lỗi thực tế:**
+`Access denied for user 'metrics_user'`
+
+**Nguyên nhân có thể xảy ra:**
+- Tài khoản `metrics_user` chưa được khởi tạo.
+- Mật khẩu MySQL Exporter không khớp.
+- Script `mysql/initdb/01-exporter.sh` chỉ chạy khi MySQL khởi tạo dữ liệu lần đầu.
+
+**Cách kiểm tra:**
+
+```powershell
+docker compose -f compose.yaml -f compose.monitoring.yaml logs --tail=50 mysql_exporter
+```
+
+**Hướng khắc phục:**
+1. Kiểm tra biến `MYSQL_EXPORTER_PASSWORD` trong `.env`.
+2. Kiểm tra tài khoản `metrics_user` trong MySQL.
+3. Đồng bộ mật khẩu tài khoản với cấu hình Exporter.
+4. Kiểm tra các quyền `PROCESS`, `REPLICATION CLIENT`, `SELECT`.
+5. Chạy lại truy vấn `mysql_up` trong Prometheus.
+
+**Kết quả thực tế:** Đã khắc phục thành công, `mysql_up = 1`. Grafana hiển thị dữ liệu truy vấn và kết nối MySQL.
+
+### 11.2. Khắc phục lỗi cAdvisor không nhận diện container
+
+**Hiện tượng:** Hai biểu đồ CPU và RAM trên Grafana hiển thị `No data`.
+
+**Nguyên nhân đã kiểm tra:**
+- Docker Desktop sử dụng `containerd snapshotter`.
+- cAdvisor v0.53.0 không nhận diện được từng container trong môi trường thực hành.
+
+**Giải pháp đã áp dụng:**
+1. Nâng cấp cAdvisor lên `ghcr.io/google/cadvisor:v0.60.6`.
+2. Giữ nguyên dữ liệu Docker volumes.
+3. Tạo lại riêng container cAdvisor.
+4. Kiểm tra metrics trên Prometheus.
+
+**Lệnh cập nhật:**
+
+```powershell
+docker compose -f compose.yaml -f compose.monitoring.yaml pull cadvisor
+docker compose -f compose.yaml -f compose.monitoring.yaml up -d --no-deps --force-recreate cadvisor
+```
+
+**Truy vấn kiểm tra RAM:**
+
+```promql
+container_memory_working_set_bytes{name!=""}
+```
+
+**Truy vấn kiểm tra CPU:**
+
+```promql
+rate(container_cpu_usage_seconds_total{name!=""}[5m])
+```
+
+**Kết quả thực tế:** Prometheus nhận diện được từng container WordPress, MySQL, Nginx, Grafana và các dịch vụ khác. Hai biểu đồ CPU/RAM trong Grafana đã hiển thị dữ liệu.
+
 
 ## 12. Sơ đồ luồng
 
